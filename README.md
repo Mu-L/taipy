@@ -21,7 +21,7 @@ Taipy is an open-source Python library for easy, end-to-end application developm
     <br/><br/>
     <a href="https://discord.com/invite/SJyz2VJGxV">Discord support</a>
     ·
-    <a href="https://docs.taipy.io/en/latest/knowledge_base/demos">Demos & Examples</a>
+    <a href="https://docs.taipy.io/en/release-3.1/gallery/">Demos & Examples</a>
   </p>
 
 &nbsp;
