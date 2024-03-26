@@ -8,32 +8,42 @@
 </div>
 
 <h1 align="center">
-Data and AI algorithms into production-ready web apps
+Build Python data & AI
+web applications.
+
+Beyond existing libraries.
 </h1>
 
 <div align="center">
-Taipy is an open-source Python library for easy, end-to-end application development,<br />featuring what-if analyses, smart pipeline execution, built-in scheduling, and deployment tools.
+From simple pilots to production-ready web applications in no time.<br />
+No more compromise on performance, customization, and scalability.
 </div>
 
   <p align="center">
     <br />
     <a href="https://docs.taipy.io/en/latest/"><strong>Explore the docs »</strong></a>
     <br/><br/>
-    <a href="https://discord.com/invite/SJyz2VJGxV">Discord support</a>
-    ·
-    <a href="https://docs.taipy.io/en/latest/knowledge_base/demos">Demos & Examples</a>
+    <a href="https://discord.com/invite/SJyz2VJGxV" target="_blank">
+    <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="32" />
+    <a href="https://docs.taipy.io/en/release-3.1/gallery/">
+    <img src="readme_img/button_demos.png" height="32"> </a>
   </p>
 
+
+
+
 &nbsp;
 
-## ⭐️ What's Taipy?
+## ⭐️ Taipy Features
 
-Taipy is designed for data scientists and machine learning engineers to build full-stack apps.
-&nbsp;
+<p align="center">
+<img src="readme_img/performance.gif" alt="Interface Animation"  width="45%" /> 
+<img src="readme_img/large_data.gif" alt="Back-End Animation"  width="45%"/>
+<img src="readme_img/GUI_editor.gif" alt="Interface Animation"  width="45%" /> 
+<img src="readme_img/large_data.gif" alt="Back-End Animation"  width="45%"/>
+</p>
 
-⭐️ Enables building production-ready web applications.<br />
-⭐️ No need to learn new languages or full-stack frameworks.<br />
-⭐️ Concentrate on Data and AI algorithms without development and deployment complexities.
+
 
 &nbsp;
 
