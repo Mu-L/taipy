@@ -18,6 +18,7 @@ from .data.data_node_id import DataNodeId
 from .job.job import Job
 from .job.job_id import JobId
 from .job.status import Status
+from .orchestrator import Orchestrator
 from .scenario.scenario import Scenario
 from .scenario.scenario_id import ScenarioId
 from .sequence.sequence import Sequence
@@ -26,9 +27,9 @@ from .submission.submission import Submission
 from .submission.submission_id import SubmissionId
 from .submission.submission_status import SubmissionStatus
 from .taipy import (
+    can_create,
     cancel_job,
     clean_all_entities,
-    clean_all_entities_by_version,
     compare_scenarios,
     create_global_data_node,
     create_scenario,
@@ -36,7 +37,6 @@ from .taipy import (
     delete_job,
     delete_jobs,
     exists,
-    export_scenario,
     get,
     get_cycles,
     get_cycles_scenarios,

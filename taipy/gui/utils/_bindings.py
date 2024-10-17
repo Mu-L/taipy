@@ -23,7 +23,7 @@ if t.TYPE_CHECKING:
 class _Bindings:
     def __init__(self, gui: "Gui") -> None:
         self.__gui = gui
-        self.__scopes = _DataScopes()
+        self.__scopes = _DataScopes(gui)
 
     def _bind(self, name: str, value: t.Any) -> None:
         if hasattr(self, name):
@@ -40,7 +40,7 @@ class _Bindings:
     def __get_property(self, name):
         def __setter(ud: _Bindings, value: t.Any):
             if isinstance(value, _MapDict):
-                value._update_var = None
+                value._update_var = None  # type: ignore[assignment]
             elif isinstance(value, dict):
                 value = _MapDict(value, None)
             ud.__gui._update_var(name, value)
@@ -68,8 +68,11 @@ class _Bindings:
         self.__scopes.create_scope(id)
         return id, create
 
+    def _delete_scope(self, id: str):
+        self.__scopes.delete_scope(id)
+
     def _new_scopes(self):
-        self.__scopes = _DataScopes()
+        self.__scopes = _DataScopes(self.__gui)
 
     def _get_data_scope(self):
         return self.__scopes.get_scope(self.__gui._get_client_id())[0]

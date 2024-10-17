@@ -27,6 +27,7 @@ class _JobConverter(_AbstractConverter):
             job.id,
             job._task.id,
             job._status,
+            {status: timestamp.isoformat() for status, timestamp in job._status_change_records.items()},
             job._force,
             job.submit_id,
             job.submit_entity_id,
@@ -50,6 +51,9 @@ class _JobConverter(_AbstractConverter):
         )
 
         job._status = model.status  # type: ignore
+        job._status_change_records = {
+            status: datetime.fromisoformat(timestamp) for status, timestamp in model.status_change_records.items()
+        }
         job._force = model.force  # type: ignore
         job._creation_date = datetime.fromisoformat(model.creation_date)  # type: ignore
         for it in model.subscribers:

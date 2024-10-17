@@ -34,6 +34,7 @@ const webAppPath = resolveApp(basePath);
 const reactManifestPath = resolveApp(basePath + "/" + reactBundle + "-manifest.json");
 const reactDllPath = resolveApp(basePath + "/" + reactBundle + ".dll.js")
 const taipyDllPath = resolveApp(basePath + "/" + taipyBundle + ".js")
+const taipyGuiBaseExportPath = resolveApp(basePath + "/taipy-gui-base-export");
 
 module.exports = (env, options) => {
     const envVariables = {
@@ -174,7 +175,6 @@ module.exports = (env, options) => {
         target: "web",
         entry: {
             "default": "./base/src/index.ts",
-            "preview": "./base/src/index-preview.ts",
         },
         output: {
             filename: (arg) => {
@@ -217,5 +217,36 @@ module.exports = (env, options) => {
         //         root: "_",
         //     },
         // },
+    },
+    {
+        entry: "./base/src/exports.ts",
+        output: {
+            filename: "taipy-gui-base.js",
+            path: taipyGuiBaseExportPath,
+            library: {
+                name: taipyGuiBaseBundleName,
+                type: "umd",
+            },
+            publicPath: "",
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.tsx?$/,
+                    use: "ts-loader",
+                    exclude: /node_modules/,
+                },
+            ],
+        },
+        resolve: {
+            extensions: [".tsx", ".ts", ".js", ".tsx"],
+        },
+        plugins: [
+            new CopyWebpackPlugin({
+                patterns: [
+                    { from: "./base/src/packaging", to: taipyGuiBaseExportPath },
+                ],
+            }),
+        ],
     }];
 };

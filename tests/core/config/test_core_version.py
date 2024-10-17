@@ -13,7 +13,7 @@ from unittest import mock
 
 import pytest
 
-from taipy.config.config import Config
+from taipy.common.config import Config
 from taipy.core._init_version import _read_version
 from taipy.core.config.core_section import CoreSection
 from taipy.core.exceptions import ConfigCoreVersionMismatched
@@ -81,8 +81,6 @@ class TestCoreVersionInCoreSectionConfig:
             version_number = ""
             force = "False:bool"
             core_version = "{core_version}"
-
-            [VERSION_MIGRATION.migration_fcts]
             """
         )
         if is_compatible:
@@ -111,8 +109,6 @@ class TestCoreVersionInCoreSectionConfig:
             version_number = ""
             force = "False:bool"
             core_version = "{core_version}"
-
-            [VERSION_MIGRATION.migration_fcts]
             """
         )
         if is_compatible:
@@ -137,7 +133,6 @@ class TestCoreVersionInCoreSectionConfig:
             mode = "development"
             version_number = ""
             force = "False:bool"
-            [VERSION_MIGRATION.migration_fcts]
             """
         )
         Config.load(file_config.filename)

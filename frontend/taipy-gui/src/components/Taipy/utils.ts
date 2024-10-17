@@ -11,7 +11,8 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import { CSSProperties, MouseEvent } from "react";
+import { MouseEvent, ReactNode } from "react";
+import { SxProps } from "@mui/material";
 
 export interface TaipyActiveProps extends TaipyDynamicProps, TaipyHoverProps {
     defaultActive?: boolean;
@@ -34,6 +35,8 @@ export interface TaipyBaseProps {
     libClassName?: string;
     className?: string;
     dynamicClassName?: string;
+    privateClassName?: string;
+    children?: ReactNode;
 }
 
 export interface TaipyMultiSelectProps {
@@ -48,15 +51,33 @@ export interface TaipyInputProps extends TaipyActiveProps, TaipyChangeProps, Tai
     type: string;
     value: string;
     defaultValue?: string;
+    step?: number;
+    defaultStep?: number;
+    stepMultiplier?: number;
+    defaultStepMultiplier?: number;
+    min?: number;
+    defaultMin?: number;
+    max?: number;
+    defaultMax?: number;
     changeDelay?: number;
     onAction?: string;
     actionKeys?: string;
     multiline?: boolean;
     linesShown?: number;
+    width?: string | number;
 }
 
 export interface TaipyLabelProps {
     label?: string;
+}
+
+export interface DateProps {
+    maxDate?: unknown;
+    maxDateTime?: unknown;
+    maxTime?: unknown;
+    minDate?: unknown;
+    minDateTime?: unknown;
+    minTime?: unknown;
 }
 
 export const getArrayValue = <T>(arr: T[], idx: number, defVal?: T): T | undefined => {
@@ -104,10 +125,45 @@ export const getCssSize = (val: string | number) => {
     return val;
 };
 
+/**
+ * Appends a suffix to the class names.
+ *
+ * @param names - The class names.
+ * @param suffix - The suffix to append.
+ * @returns The new list of class names.
+ */
 export const getSuffixedClassNames = (names: string | undefined, suffix: string) =>
     (names || "")
         .split(/\s+/)
         .map((n) => n + suffix)
         .join(" ");
 
-export const emptyStyle = {} as CSSProperties;
+export const disableColor = <T>(color: T, disabled: boolean) => (disabled ? ("disabled" as T) : color);
+
+export const getProps = (p: DateProps, start: boolean, val: Date | null, withTime: boolean): DateProps => {
+    if (!val) {
+        return {};
+    }
+    const propName: keyof DateProps = withTime
+        ? start
+            ? "minDateTime"
+            : "maxDateTime"
+        : start
+        ? "minDate"
+        : "maxDate";
+    if (p[propName] == val) {
+        return p;
+    }
+    return { ...p, [propName]: val };
+};
+
+export const expandSx = (sx: SxProps | undefined, ...partials: (SxProps | undefined)[]) => {
+    const start = sx || {};
+    const end = partials.reduce((prevSx: SxProps, partialSx) => {
+        if (partialSx) {
+            return { ...prevSx, ...partialSx } as SxProps;
+        }
+        return prevSx;
+    }, start);
+    return start === end ? sx : end;
+};

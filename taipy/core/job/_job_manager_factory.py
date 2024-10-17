@@ -8,28 +8,28 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
-
+from functools import lru_cache
 from typing import Type
 
 from .._manager._manager_factory import _ManagerFactory
+from ..common._check_dependencies import EnterpriseEditionUtils
 from ..common._utils import _load_fct
 from ._job_fs_repository import _JobFSRepository
 from ._job_manager import _JobManager
-from ._job_sql_repository import _JobSQLRepository
 
 
 class _JobManagerFactory(_ManagerFactory):
-
-    __REPOSITORY_MAP = {"default": _JobFSRepository, "sql": _JobSQLRepository}
+    __REPOSITORY_MAP = {"default": _JobFSRepository}
 
     @classmethod
-    def _build_manager(cls) -> Type[_JobManager]:  # type: ignore
-        if cls._using_enterprise():
+    @lru_cache
+    def _build_manager(cls) -> Type[_JobManager]:
+        if EnterpriseEditionUtils._using_enterprise():
             job_manager = _load_fct(
-                cls._TAIPY_ENTERPRISE_CORE_MODULE + ".job._job_manager", "_JobManager"
+                EnterpriseEditionUtils._TAIPY_ENTERPRISE_CORE_MODULE + ".job._job_manager", "_JobManager"
             )  # type: ignore
             build_repository = _load_fct(
-                cls._TAIPY_ENTERPRISE_CORE_MODULE + ".job._job_manager_factory", "_JobManagerFactory"
+                EnterpriseEditionUtils._TAIPY_ENTERPRISE_CORE_MODULE + ".job._job_manager_factory", "_JobManagerFactory"
             )._build_repository  # type: ignore
         else:
             job_manager = _JobManager
@@ -38,5 +38,6 @@ class _JobManagerFactory(_ManagerFactory):
         return job_manager  # type: ignore
 
     @classmethod
+    @lru_cache
     def _build_repository(cls):
         return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()

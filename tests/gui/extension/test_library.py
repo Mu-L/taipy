@@ -135,7 +135,7 @@ def test_lib_input_html_1(gui: Gui, test_client, helpers):
         'defaultValue=""',
         "broadcast={_bc_broadcast}",
         "value={tpec_TpExPr_val_TPMDL_0}",
-        "</TestLib_Input>",
+        "/>",
     ]
     helpers.test_control_html(gui, html_string, expected_list)
 
@@ -150,7 +150,7 @@ def test_lib_input_html_2(gui: Gui, test_client, helpers):
         'defaultValue=""',
         "broadcast={_bc_broadcast}",
         "value={tpec_TpExPr_val_TPMDL_0}",
-        "</TestLib_Input>",
+        "/>",
     ]
     helpers.test_control_html(gui, html_string, expected_list)
 
@@ -162,7 +162,7 @@ def test_lib_inner_md(gui: Gui, test_client, helpers):
     expected = [
         "<TestLib_Inner",
         "value={tpec_TpExPr_val_TPMDL_0}",
-        "withProperty={tpec_TpExPr_tpec_TpExPr_val_TPMDL_0_TPMDL_0}",
+        "withProperty={tpec_TpExPr_val_TPMDL_0}",
     ]
     helpers.test_control_md(gui, md_string, expected)
 
