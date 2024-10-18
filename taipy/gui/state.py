@@ -13,6 +13,7 @@ import inspect
 import typing as t
 from contextlib import nullcontext
 from operator import attrgetter
+from pathlib import Path
 from types import FrameType
 
 from flask import has_app_context
@@ -28,14 +29,14 @@ class State:
     """Accessor to the bound variables from callbacks.
 
     `State` is used when you need to access the value of variables
-    bound to visual elements (see [Binding](../gui/binding.md)).<br/>
+    bound to visual elements (see [Binding](../../../../../userman/gui/binding.md)).<br/>
     Because each browser connected to the application server may represent and
     modify any variable at any moment as the result of user interaction, each
     connection holds its own set of variables along with their values. We call
     the set of these the application variables the application _state_, as seen
     by a given client.
 
-    Each callback (see [Callbacks](../gui/callbacks.md)) receives a specific
+    Each callback (see [Callbacks](../../../../../userman/gui/callbacks.md)) receives a specific
     instance of the `State` class, where you can find all the variables bound to
     visual elements in your application.
 
@@ -83,6 +84,7 @@ class State:
         "broadcast",
         "get_gui",
         "refresh",
+        "set_favicon",
         "_set_context",
         "_notebook_context",
         "_get_placeholder",
@@ -115,6 +117,8 @@ class State:
         return filter(lambda n: n not in excluded_attrs, var_list)
 
     def __getattribute__(self, name: str) -> t.Any:
+        if name == "__class__":
+            return State
         if name in State.__methods:
             return super().__getattribute__(name)
         gui: "Gui" = self.get_gui()
@@ -126,7 +130,7 @@ class State:
             name not in gui._get_shared_variables() and not gui._bindings()._is_single_client()
         ):
             raise AttributeError(f"Variable '{name}' is not available to be accessed in shared callback.")
-        if name not in super().__getattribute__(State.__attrs[1]):
+        if not name.startswith("__") and name not in super().__getattribute__(State.__attrs[1]):
             raise AttributeError(f"Variable '{name}' is not defined.")
         with self._notebook_context(gui), self._set_context(gui):
             encoded_name = gui._bind_var(name)
@@ -138,7 +142,7 @@ class State:
             name not in gui._get_shared_variables() and not gui._bindings()._is_single_client()
         ):
             raise AttributeError(f"Variable '{name}' is not available to be accessed in shared callback.")
-        if name not in super().__getattribute__(State.__attrs[1]):
+        if not name.startswith("__") and name not in super().__getattribute__(State.__attrs[1]):
             raise AttributeError(f"Variable '{name}' is not accessible.")
         with self._notebook_context(gui), self._set_context(gui):
             encoded_name = gui._bind_var(name)
@@ -243,3 +247,18 @@ class State:
 
     def __exit__(self, exc_type, exc_value, traceback):
         return super().__getattribute__(State.__attrs[0]).__exit__(exc_type, exc_value, traceback)
+
+    def set_favicon(self, favicon_path: t.Union[str, Path]):
+        """Change the favicon for the client of this state.
+
+        This function dynamically changes the favicon (the icon associated with the application's
+        pages) of Taipy GUI pages for the specific client of this state.
+
+        Note that the *favicon* parameter to `(Gui.)run()^` can also be used to change
+        the favicon when the application starts.
+
+        Arguments:
+            favicon_path: The path to the image file to use.<br/>
+                This can be expressed as a path name or a URL (relative or not).
+        """
+        super().__getattribute__(State.__gui_attr).set_favicon(favicon_path, self)

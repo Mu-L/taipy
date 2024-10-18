@@ -11,20 +11,22 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import CardHeader from "@mui/material/CardHeader";
 import MuiButton from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 
 import { createSendActionNameAction } from "../../context/taipyReducers";
-import { getSuffixedClassNames, TaipyActiveProps } from "./utils";
+import { getCssSize, getSuffixedClassNames, TaipyActiveProps } from "./utils";
 import { useClassNames, useDispatch, useDynamicProperty, useModule } from "../../utils/hooks";
 import { stringIcon, Icon, IconAvatar } from "../../utils/icon";
+import { getComponentClassName } from "./TaipyStyle";
 
 interface ButtonProps extends TaipyActiveProps {
     onAction?: string;
     label: string;
     defaultLabel?: string;
+    width?: string | number;
 }
 
 const cardSx = { p: 0 };
@@ -39,6 +41,8 @@ const Button = (props: ButtonProps) => {
     const active = useDynamicProperty(props.active, props.defaultActive, true);
     const hover = useDynamicProperty(props.hoverText, props.defaultHoverText, undefined);
 
+    const buttonSx = useMemo(() => (props.width ? { width: getCssSize(props.width) } : undefined), [props.width]);
+
     const handleClick = useCallback(() => {
         dispatch(createSendActionNameAction(id, module, onAction));
     }, [id, onAction, dispatch, module]);
@@ -48,7 +52,7 @@ const Button = (props: ButtonProps) => {
             if (props.label === undefined && defaultLabel) {
                 try {
                     return JSON.parse(defaultLabel) as Icon;
-                } catch (e) {
+                } catch {
                     return defaultLabel;
                 }
             }
@@ -61,7 +65,14 @@ const Button = (props: ButtonProps) => {
 
     return (
         <Tooltip title={hover || ""}>
-            <MuiButton id={id} variant="outlined" className={className} onClick={handleClick} disabled={!active}>
+            <MuiButton
+                id={id}
+                variant="outlined"
+                className={`${className} ${getComponentClassName(props.children)}`}
+                onClick={handleClick}
+                disabled={!active}
+                sx={buttonSx}
+            >
                 {typeof value === "string" ? (
                     value
                 ) : (value as Icon).text ? (
@@ -77,6 +88,7 @@ const Button = (props: ButtonProps) => {
                 ) : (
                     <IconAvatar img={value as Icon} className={getSuffixedClassNames(className, "-image")} />
                 )}
+                {props.children}
             </MuiButton>
         </Tooltip>
     );

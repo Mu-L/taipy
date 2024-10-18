@@ -1,29 +1,49 @@
-# Installation
+# Taipy Installation Guide
 
-There are different ways to install Taipy, depending on how you plan to use it.
+Taipy can be installed in various ways depending on your needs. 
 
-If your goal is to look into the code, modify and improve it, go straight
-to the [source installation](#installing-for-development) section.
+If you aim to modify the code or contribute to its development, refer to the 
 
-Taipy needs your system to have Python 3.8 or above installed.
+[source installation](#installing-for-development) section. 
 
-## Installing from PyPI
+Ensure that you have Python 3.9 or above installed on your system.
 
-The easiest way to install Taipy is from the
-[Pypi software repository](https://pypi.org/project/taipy/).
+## Installing Taipy from PyPI
 
-Run the command:
+The easiest way to install Taipy is through the 
+
+[PyPI software repository](https://pypi.org/project/taipy/). 
+
+You can do this by running the following command:
+
 ```bash
 pip install taipy
 ```
 
-If you are running in a virtual environment, you will have to issue the command:
+If you are using a virtual environment, use:
+
 ```bash
 pipenv install taipy
 ```
 
+Alternatively, you can use `venv` to create a virtual environment:
+```bash
+python -m venv myenv
+source myenv/bin/activate  # On Windows use `myenv\Scripts\activate`
+pip install taipy
+```
+
 These commands install the `taipy` package in the Python environment with all its
 dependencies.
+
+## Installing a Specific Version from PyPI
+
+To install a specific version of Taipy, use the following command:
+```bash
+pip install taipy==<version>
+```
+Replace `<version>` with a specific version number of Taipy.
+The list of all released Taipy versions can be found [here](https://pypi.org/project/taipy/#history).
 
 ## Installing from GitHub
 
@@ -80,7 +100,7 @@ cd frontend/taipy-gui
 cd dom
 npm i
 cd ..
-npm i --omit=optional
+npm i
 npm run build
 #
 # Build the Taipy front-end bundle
@@ -120,7 +140,6 @@ TypeScript code from your debugger.
 > If you set this variable to the location where you build the web app
 > repeatedly, you will no longer have to reinstall Taipy GUI before you
 > try your code again.
-
 
 ## Running the tests
 

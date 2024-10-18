@@ -17,7 +17,8 @@ import Tooltip from "@mui/material/Tooltip";
 
 import { formatWSValue } from "../../utils";
 import { useClassNames, useDynamicProperty, useFormatConfig } from "../../utils/hooks";
-import { TaipyBaseProps, TaipyHoverProps } from "./utils";
+import { TaipyBaseProps, TaipyHoverProps, getCssSize } from "./utils";
+import { getComponentClassName } from "./TaipyStyle";
 
 interface TaipyFieldProps extends TaipyBaseProps, TaipyHoverProps {
     dataType?: string;
@@ -26,6 +27,7 @@ interface TaipyFieldProps extends TaipyBaseProps, TaipyHoverProps {
     format?: string;
     raw?: boolean;
     mode?: string;
+    width?: string | number;
 }
 
 const unsetWeightSx = { fontWeight: "unset" };
@@ -41,6 +43,18 @@ const Field = (props: TaipyFieldProps) => {
 
     const mode = typeof props.mode === "string" ? props.mode.toLowerCase() : undefined;
 
+    const style = useMemo(
+        () => ({ overflow: "auto", width: props.width ? getCssSize(props.width) : undefined }),
+        [props.width]
+    );
+    const typoSx = useMemo(
+        () =>
+            props.width
+                ? { ...unsetWeightSx, overflow: "auto", width: getCssSize(props.width), display: "inline-block" }
+                : unsetWeightSx,
+        [props.width]
+    );
+
     const value = useMemo(() => {
         return formatWSValue(
             props.value !== undefined ? props.value : defaultValue || "",
@@ -52,19 +66,29 @@ const Field = (props: TaipyFieldProps) => {
 
     return (
         <Tooltip title={hover || ""}>
-            {mode == "pre" ? (
-                <pre className={className} id={id}>{value}</pre>
-            ) : mode == "markdown" || mode == "md" ? (
-                <Markdown className={className}>{value}</Markdown>
-            ) : raw || mode == "raw" ? (
-                <span className={className} id={id}>
-                    {value}
-                </span>
-            ) : (
-                <Typography className={className} id={id} component="span" sx={unsetWeightSx}>
-                    {value}
-                </Typography>
-            )}
+            <>
+                {mode == "pre" ? (
+                    <pre className={`${className} ${getComponentClassName(props.children)}`} id={id} style={style}>
+                        {value}
+                    </pre>
+                ) : mode == "markdown" || mode == "md" ? (
+                    <Markdown className={`${className} ${getComponentClassName(props.children)}`}>{value}</Markdown>
+                ) : raw || mode == "raw" ? (
+                    <span className={className} id={id} style={style}>
+                        {value}
+                    </span>
+                ) : (
+                    <Typography
+                        className={`${className} ${getComponentClassName(props.children)}`}
+                        id={id}
+                        component="span"
+                        sx={typoSx}
+                    >
+                        {value}
+                    </Typography>
+                )}
+                {props.children}
+            </>
         </Tooltip>
     );
 };
