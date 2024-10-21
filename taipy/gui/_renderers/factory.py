@@ -31,6 +31,7 @@ class _Factory:
 
     __CONTROL_DEFAULT_PROP_NAME = {
         "button": "label",
+        "chat": "messages",
         "chart": "data",
         "content": "value",
         "date": "date",
@@ -45,15 +46,18 @@ class _Factory:
         "layout": "columns",
         "login": "title",
         "menu": "lov",
+        "metric": "value",
         "navbar": "value",
         "number": "value",
         "pane": "open",
         "part": "class_name",
+        "progress": "value",
         "selector": "value",
         "slider": "value",
         "status": "value",
         "table": "data",
         "text": "value",
+        "time": "time",
         "toggle": "value",
         "tree": "value",
     }
@@ -75,10 +79,28 @@ class _Factory:
         .set_value_and_default(with_update=False)
         .set_attributes(
             [
-                ("id",),
                 ("on_action", PropertyType.function),
                 ("active", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
+                ("width", PropertyType.string_or_number),
+            ]
+        ),
+        "chat": lambda gui, control_type, attrs: _Builder(
+            gui=gui, control_type=control_type, element_name="Chat", attributes=attrs, default_value=None
+        )
+        .set_value_and_default(with_update=True, with_default=False, var_type=PropertyType.data)
+        .set_attributes(
+            [
+                ("on_action", PropertyType.function),
+                ("active", PropertyType.dynamic_boolean, True),
+                ("hover_text", PropertyType.dynamic_string),
+                ("with_input", PropertyType.dynamic_boolean, True),
+                ("users", PropertyType.lov),
+                ("sender_id",),
+                ("height",),
+                ("page_size", PropertyType.number, 50),
+                ("show_sender", PropertyType.boolean, False),
+                ("mode",),
             ]
         ),
         "chart": lambda gui, control_type, attrs: _Builder(
@@ -87,7 +109,6 @@ class _Factory:
         .set_value_and_default(with_default=False, var_type=PropertyType.data)
         .set_attributes(
             [
-                ("id",),
                 ("title",),
                 ("width", PropertyType.string_or_number),
                 ("height", PropertyType.string_or_number),
@@ -102,6 +123,7 @@ class _Factory:
                 ("template[dark]", PropertyType.dict, gui._get_config("chart_dark_template", None)),
                 ("template[light]", PropertyType.dict),
                 ("figure", PropertyType.to_json),
+                ("on_click", PropertyType.function),
             ]
         )
         ._get_chart_config("scatter", "lines+markers")
@@ -120,13 +142,16 @@ class _Factory:
         .set_attributes(
             [
                 ("with_time", PropertyType.boolean),
-                ("id",),
                 ("active", PropertyType.dynamic_boolean, True),
+                ("analogic", PropertyType.boolean),
+                ("min", PropertyType.dynamic_date),
+                ("max", PropertyType.dynamic_date),
                 ("editable", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
                 ("label",),
                 ("on_change", PropertyType.function),
                 ("format",),
+                ("width", PropertyType.string_or_number),
             ]
         )
         ._set_propagate(),
@@ -140,14 +165,15 @@ class _Factory:
         .set_attributes(
             [
                 ("with_time", PropertyType.boolean),
-                ("id",),
                 ("active", PropertyType.dynamic_boolean, True),
+                ("analogic", PropertyType.boolean),
                 ("editable", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
                 ("label_start",),
                 ("label_end",),
                 ("on_change", PropertyType.function),
                 ("format",),
+                ("width", PropertyType.string_or_number),
             ]
         )
         ._set_propagate(),
@@ -161,7 +187,6 @@ class _Factory:
         ._set_partial()  # partial should be set before page
         .set_attributes(
             [
-                ("id",),
                 ("page",),
                 ("title",),
                 ("on_action", PropertyType.function),
@@ -181,7 +206,6 @@ class _Factory:
         ._set_partial()  # partial should be set before page
         .set_attributes(
             [
-                ("id",),
                 ("page",),
                 ("expanded", PropertyType.dynamic_boolean, True, True, False),
                 ("hover_text", PropertyType.dynamic_string),
@@ -198,7 +222,6 @@ class _Factory:
         ._set_content("content", image=False)
         .set_attributes(
             [
-                ("id",),
                 ("on_action", PropertyType.function),
                 ("active", PropertyType.dynamic_boolean, True),
                 ("render", PropertyType.dynamic_boolean, True),
@@ -206,6 +229,7 @@ class _Factory:
                 ("bypass_preview", PropertyType.boolean, True),
                 ("name",),
                 ("hover_text", PropertyType.dynamic_string),
+                ("width", PropertyType.string_or_number),
             ]
         ),
         "file_selector": lambda gui, control_type, attrs: _Builder(
@@ -218,7 +242,6 @@ class _Factory:
         ._set_file_content()
         .set_attributes(
             [
-                ("id",),
                 ("on_action", PropertyType.function),
                 ("active", PropertyType.dynamic_boolean, True),
                 ("multiple", PropertyType.boolean, False),
@@ -226,6 +249,7 @@ class _Factory:
                 ("drop_message",),
                 ("hover_text", PropertyType.dynamic_string),
                 ("notify", PropertyType.boolean, True),
+                ("width", PropertyType.string_or_number),
             ]
         ),
         "image": lambda gui, control_type, attrs: _Builder(
@@ -238,7 +262,6 @@ class _Factory:
         ._set_content("content")
         .set_attributes(
             [
-                ("id",),
                 ("on_action", PropertyType.function),
                 ("active", PropertyType.dynamic_boolean, True),
                 ("width",),
@@ -255,13 +278,11 @@ class _Factory:
         .set_value_and_default(with_update=False, native_type=True)
         .set_attributes(
             [
-                ("id",),
                 ("min", PropertyType.number),
                 ("max", PropertyType.number),
                 ("value", PropertyType.dynamic_number),
                 ("format",),
-                ("orientation"),
-                ("hover_text", PropertyType.dynamic_string),
+                ("orientation",),
                 ("width",),
                 ("height",),
             ]
@@ -277,7 +298,6 @@ class _Factory:
         ._set_propagate()
         .set_attributes(
             [
-                ("id",),
                 ("active", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
                 ("on_change", PropertyType.function),
@@ -287,6 +307,7 @@ class _Factory:
                 ("change_delay", PropertyType.number, gui._get_config("change_delay", None)),
                 ("multiline", PropertyType.boolean, False),
                 ("lines_shown", PropertyType.number, 5),
+                ("width", PropertyType.string_or_number),
             ]
         ),
         "layout": lambda gui, control_type, attrs: _Builder(
@@ -295,7 +316,6 @@ class _Factory:
         .set_value_and_default(with_default=False)
         .set_attributes(
             [
-                ("id",),
                 ("columns[mobile]",),
                 ("gap",),
             ]
@@ -306,7 +326,6 @@ class _Factory:
         .set_value_and_default(default_val="Log-in")
         .set_attributes(
             [
-                ("id",),
                 ("message", PropertyType.dynamic_string),
                 ("on_action", PropertyType.function, "on_login"),
             ]
@@ -317,31 +336,58 @@ class _Factory:
             element_name="MenuCtl",
             attributes=attrs,
         )
-        ._get_adapter("lov")  # need to be called before set_lov
-        ._set_lov()
         .set_attributes(
             [
-                ("id",),
                 ("active", PropertyType.dynamic_boolean, True),
-                ("label"),
-                ("width"),
+                ("label",),
+                ("width",),
                 ("width[mobile]",),
                 ("on_action", PropertyType.function),
                 ("inactive_ids", PropertyType.dynamic_list),
                 ("hover_text", PropertyType.dynamic_string),
+                ("lov", PropertyType.lov),
             ]
         )
         ._set_propagate(),
-        "navbar": lambda gui, control_type, attrs: _Builder(
-            gui=gui, control_type=control_type, element_name="NavBar", attributes=attrs, default_value=None
+        "metric": lambda gui, control_type, attrs: _Builder(
+            gui=gui,
+            control_type=control_type,
+            element_name="Metric",
+            attributes=attrs,
         )
-        ._get_adapter("lov", multi_selection=False)  # need to be called before set_lov
-        ._set_lov()
+        .set_value_and_default(var_type=PropertyType.dynamic_number, native_type=True)
         .set_attributes(
             [
-                ("id",),
+                ("title",),
+                ("active", PropertyType.dynamic_boolean, True),
+                ("layout", PropertyType.dynamic_dict),
+                ("type", PropertyType.string, "circular"),
+                ("min", PropertyType.number, 0),
+                ("max", PropertyType.number, 100),
+                ("delta", PropertyType.dynamic_number),
+                ("delta_color", PropertyType.string),
+                ("negative_delta_color", PropertyType.string),
+                ("threshold", PropertyType.dynamic_number),
+                ("width", PropertyType.string_or_number),
+                ("height", PropertyType.string_or_number),
+                ("show_value", PropertyType.boolean, True),
+                ("format", PropertyType.string),
+                ("delta_format", PropertyType.string),
+                ("bar_color", PropertyType.string),
+                ("color_map", PropertyType.dict),
+                ("hover_text", PropertyType.dynamic_string),
+                ("template", PropertyType.dict),
+                ("template[dark]", PropertyType.dict),
+                ("template[light]", PropertyType.dict),
+            ]
+        ),
+        "navbar": lambda gui, control_type, attrs: _Builder(
+            gui=gui, control_type=control_type, element_name="NavBar", attributes=attrs, default_value=None
+        ).set_attributes(
+            [
                 ("active", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
+                ("lov", PropertyType.single_lov),
             ]
         ),
         "number": lambda gui, control_type, attrs: _Builder(
@@ -356,13 +402,17 @@ class _Factory:
         ._set_propagate()
         .set_attributes(
             [
-                ("id",),
                 ("active", PropertyType.dynamic_boolean, True),
+                ("step", PropertyType.dynamic_number, 1),
+                ("step_multiplier", PropertyType.dynamic_number, 10),
+                ("min", PropertyType.dynamic_number),
+                ("max", PropertyType.dynamic_number),
                 ("hover_text", PropertyType.dynamic_string),
                 ("on_change", PropertyType.function),
                 ("on_action", PropertyType.function),
                 ("label",),
                 ("change_delay", PropertyType.number, gui._get_config("change_delay", None)),
+                ("width", PropertyType.string_or_number),
             ]
         ),
         "pane": lambda gui, control_type, attrs: _Builder(
@@ -372,7 +422,6 @@ class _Factory:
         ._set_partial()  # partial should be set before page
         .set_attributes(
             [
-                ("id",),
                 ("page",),
                 ("anchor", PropertyType.string, "left"),
                 ("on_close", PropertyType.function),
@@ -382,6 +431,7 @@ class _Factory:
                 ("height", PropertyType.string_or_number, "30vh"),
                 ("hover_text", PropertyType.dynamic_string),
                 ("on_change", PropertyType.function),
+                ("show_button", PropertyType.boolean, False),
             ]
         )
         ._set_propagate(),
@@ -391,19 +441,34 @@ class _Factory:
         ._set_partial()  # partial should be set before page
         .set_attributes(
             [
-                ("id",),
                 ("page", PropertyType.dynamic_string),
                 ("render", PropertyType.dynamic_boolean, True),
                 ("height", PropertyType.dynamic_string),
                 ("content", PropertyType.toHtmlContent),
+                ("width", PropertyType.string_or_number),
+            ]
+        ),
+        "progress": lambda gui, control_type, attrs: _Builder(
+            gui=gui,
+            control_type=control_type,
+            element_name="Progress",
+            attributes=attrs,
+        )
+        .set_value_and_default(var_type=PropertyType.dynamic_number, native_type=True)
+        .set_attributes(
+            [
+                ("linear", PropertyType.boolean, False),
+                ("show_value", PropertyType.boolean, False),
+                ("title", PropertyType.dynamic_string),
+                ("title_anchor", PropertyType.string, "bottom"),
+                ("render", PropertyType.dynamic_boolean, True),
+                ("width", PropertyType.string_or_number),
             ]
         ),
         "selector": lambda gui, control_type, attrs: _Builder(
             gui=gui, control_type=control_type, element_name="Selector", attributes=attrs, default_value=None
         )
         .set_value_and_default(with_default=False, var_type=PropertyType.lov_value)
-        ._get_adapter("lov")  # need to be called before set_lov
-        ._set_lov()
         .set_attributes(
             [
                 ("active", PropertyType.dynamic_boolean, True),
@@ -411,13 +476,13 @@ class _Factory:
                 ("filter", PropertyType.boolean),
                 ("height", PropertyType.string_or_number),
                 ("hover_text", PropertyType.dynamic_string),
-                ("id",),
                 ("value_by_id", PropertyType.boolean),
                 ("multiple", PropertyType.boolean),
                 ("width", PropertyType.string_or_number),
                 ("on_change", PropertyType.function),
                 ("label",),
                 ("mode",),
+                ("lov", PropertyType.lov),
             ]
         )
         ._set_propagate(),
@@ -432,17 +497,16 @@ class _Factory:
         .set_attributes(
             [
                 ("active", PropertyType.dynamic_boolean, True),
-                ("height"),
+                ("height",),
                 ("hover_text", PropertyType.dynamic_string),
-                ("id",),
                 ("value_by_id", PropertyType.boolean),
                 ("max", PropertyType.number, 100),
                 ("min", PropertyType.number, 0),
                 ("step", PropertyType.number, 1),
-                ("orientation"),
+                ("orientation",),
                 ("width", PropertyType.string, "300px"),
                 ("on_change", PropertyType.function),
-                ("continuous", PropertyType.boolean, True),
+                ("continuous", PropertyType.boolean, None),
                 ("lov", PropertyType.lov),
                 ("change_delay", PropertyType.number, gui._get_config("change_delay", None)),
             ]
@@ -459,7 +523,6 @@ class _Factory:
         .set_value_and_default(with_update=False)
         .set_attributes(
             [
-                ("id",),
                 ("without_close", PropertyType.boolean, False),
                 ("hover_text", PropertyType.dynamic_string),
             ]
@@ -472,6 +535,7 @@ class _Factory:
         )
         .set_value_and_default(with_default=False, var_type=PropertyType.data)
         ._get_dataframe_attributes()
+        ._get_list_attribute("selected", PropertyType.number)
         .set_attributes(
             [
                 ("page_size", PropertyType.number, "100"),
@@ -480,22 +544,21 @@ class _Factory:
                 ("auto_loading", PropertyType.boolean),
                 ("width", PropertyType.string_or_number, "100%"),
                 ("height", PropertyType.string_or_number, "80vh"),
-                ("id",),
                 ("active", PropertyType.dynamic_boolean, True),
-                ("editable", PropertyType.dynamic_boolean, True),
-                ("on_edit", PropertyType.function),
-                ("on_delete", PropertyType.function),
-                ("on_add", PropertyType.function),
+                ("editable", PropertyType.dynamic_boolean, False),
+                ("on_edit", PropertyType.function, gui._get_call_method_name("table_on_edit")),
+                ("on_delete", PropertyType.function, gui._get_call_method_name("table_on_delete")),
+                ("on_add", PropertyType.function, gui._get_call_method_name("table_on_add")),
                 ("on_action", PropertyType.function),
                 ("nan_value",),
                 ("filter", PropertyType.boolean),
                 ("hover_text", PropertyType.dynamic_string),
                 ("size",),
                 ("downloadable", PropertyType.boolean),
+                ("use_checkbox", PropertyType.boolean),
             ]
         )
         ._set_propagate()
-        ._get_list_attribute("selected", PropertyType.number)
         ._set_table_pagesize_options(),
         "text": lambda gui, control_type, attrs: _Builder(
             gui=gui,
@@ -508,29 +571,48 @@ class _Factory:
         .set_attributes(
             [
                 ("format",),
-                ("id",),
                 ("hover_text", PropertyType.dynamic_string),
                 ("raw", PropertyType.boolean, False),
                 ("mode",),
+                ("width", PropertyType.string_or_number),
             ]
         ),
+        "time": lambda gui, control_type, attrs: _Builder(
+            gui=gui,
+            control_type=control_type,
+            element_name="TimeSelector",
+            attributes=attrs,
+            default_value=datetime.today().time(),
+        )
+        .set_value_and_default(var_type=PropertyType.time)
+        .set_attributes(
+            [
+                ("active", PropertyType.dynamic_boolean, True),
+                ("analogic", PropertyType.boolean),
+                ("editable", PropertyType.dynamic_boolean, True),
+                ("hover_text", PropertyType.dynamic_string),
+                ("label",),
+                ("format",),
+                ("width", PropertyType.string_or_number),
+            ]
+        )
+        ._set_propagate(),
         "toggle": lambda gui, control_type, attrs: _Builder(
             gui=gui, control_type=control_type, element_name="Toggle", attributes=attrs, default_value=None
         )
         .set_value_and_default(with_default=False, var_type=PropertyType.toggle_value)
-        ._get_adapter("lov", multi_selection=False)  # need to be called before set_lov
-        ._set_lov()
         .set_attributes(
             [
                 ("active", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
-                ("id",),
                 ("label",),
                 ("value_by_id", PropertyType.boolean),
                 ("unselected_value", PropertyType.string, ""),
                 ("allow_unselect", PropertyType.boolean),
                 ("on_change", PropertyType.function),
                 ("mode",),
+                ("lov", PropertyType.single_lov),
+                ("width", PropertyType.string_or_number),
             ]
         )
         ._set_kind()
@@ -549,7 +631,6 @@ class _Factory:
                 ("filter", PropertyType.boolean),
                 ("hover_text", PropertyType.dynamic_string),
                 ("height", PropertyType.string_or_number),
-                ("id",),
                 ("value_by_id", PropertyType.boolean),
                 ("multiple", PropertyType.boolean),
                 ("width", PropertyType.string_or_number),
@@ -564,6 +645,8 @@ class _Factory:
 
     # TODO: process \" in property value
     _PROPERTY_RE = re.compile(r"\s+([a-zA-Z][\.a-zA-Z_$0-9]*(?:\[(?:.*?)\])?)=\"((?:(?:(?<=\\)\")|[^\"])*)\"")
+
+    __COUNTER = 0
 
     @staticmethod
     def set_library(library: "ElementLibrary"):
@@ -624,16 +707,19 @@ class _Factory:
         name = name[len(_Factory.__TAIPY_NAME_SPACE) :] if name.startswith(_Factory.__TAIPY_NAME_SPACE) else name
         builder = _Factory.__CONTROL_BUILDERS.get(name)
         built = None
-        with gui._get_autorization():
+        _Factory.__COUNTER += 1
+        with gui._get_authorization():
             if builder is None:
                 lib, element_name, element = _Factory.__get_library_element(name)
                 if lib:
                     from ..extension.library import Element
 
                     if isinstance(element, Element):
-                        return element._call_builder(element_name, gui, all_properties, lib, is_html)
+                        return element._call_builder(
+                            element_name, gui, all_properties, lib, is_html, counter=_Factory.__COUNTER
+                        )
             else:
                 built = builder(gui, name, all_properties)
             if isinstance(built, _Builder):
-                return built._build_to_string() if is_html else built.el
+                return built._build_to_string() if is_html else built.get_element()
         return None

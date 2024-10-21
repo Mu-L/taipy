@@ -34,6 +34,8 @@ class Page:
     your application variables and interact with them.
     """
 
+    page_type: str = "Taipy"
+
     def __init__(self, **kwargs) -> None:
         from .custom import Page as CustomPage
 
@@ -58,12 +60,12 @@ class Page:
             # Extract the page module's attributes and methods
             cls = type(self)
             cls_locals = dict(vars(self))
-            funcs = [
+            functions = [
                 i[0]
                 for i in inspect.getmembers(cls)
-                if not i[0].startswith("_") and (inspect.ismethod(i[1]) or inspect.isfunction(i[1]))
+                if not i[0].startswith("_") and inspect.isroutine(i[1])
             ]
-            for f in funcs:
+            for f in functions:
                 func = getattr(self, f)
                 if hasattr(func, "__func__") and func.__func__ is not None:
                     cls_locals[f] = func.__func__
@@ -72,6 +74,7 @@ class Page:
         # Special variables only use for page reloading in notebook context
         self._notebook_gui: t.Optional["Gui"] = None
         self._notebook_page: t.Optional["_Page"] = None
+        self.set_style(kwargs.get("style", None))
 
     def create_page(self) -> t.Optional[Page]:
         """Create the page content for page modules.
@@ -87,6 +90,25 @@ class Page:
             The page content for this Page subclass, making it a page module.
         """
         return None
+
+    def set_content(self, content: str) -> None:
+        """Set a new page content.
+
+        Reads the new page content and re-initializes the `Page^` instance to reflect the change.
+
+        !!! important
+            This function can only be used in an IPython notebook context.
+
+        Arguments:
+            content (str): The text content or the path to the file holding the text to be transformed.
+                If *content* is a path to a readable file, the file is read entirely as the text
+                template.
+
+        Exceptions:
+            RuntimeError: If this method is called outside an IPython notebook context.
+        """
+        # Implemented in the private _Renderer class
+        raise NotImplementedError("Not in a valid Page class.")
 
     def _get_locals(self) -> t.Optional[t.Dict[str, t.Any]]:
         return (
@@ -119,3 +141,42 @@ class Page:
         if self._renderer is not None:
             return self._renderer.render(gui)
         return "<h1>No renderer found for page</h1>"
+
+    def set_style(self, style: t.Dict[str, t.Dict[str, t.Any]]) -> Page:
+        """Set the style for this page.
+
+        The *style* parameter must contain a series of CSS rules that apply to the generated
+        page.<br/>
+        Each key of this dictionary should be a CSS selector and its associated value must be
+        a CSS declaration or a CSS rule itself, benefiting from
+        [nested CSS](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_nesting/Using_CSS_nesting)
+        features.
+
+        For example, you could set the *style* parameter to:
+        ```python
+        {
+          "class1": {
+            "css_property1": "css_value1",
+          }
+          "class2": {
+            "class3": {
+              "css_property2": "css_value2",
+            }
+          }
+        }
+        ```
+        That would set the "css_property1" to "css_value1" for all elements with the "class1"
+        class, and "css_property2" to "css_value2" for all elements with the "class3" class that
+        are descendants of elements with the "class2" class.
+
+        Arguments:
+            style (dict): A dictionary describing the style as CSS or Nested CSS.
+
+        Returns:
+            This `Page` instance.
+        """
+        self.__style = style if isinstance(style, dict) else None
+        return self
+
+    def _get_style(self):
+        return self.__style

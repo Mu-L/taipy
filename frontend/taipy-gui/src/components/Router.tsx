@@ -18,7 +18,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/system";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import { SnackbarProvider } from "notistack";
 import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -30,7 +30,7 @@ import {
     createSetLocationsAction,
     initializeWebSocket,
     INITIAL_STATE,
-    retreiveBlockUi,
+    retrieveBlockUi,
     taipyInitialize,
     taipyReducer,
 } from "../context/taipyReducers";
@@ -79,7 +79,7 @@ const Router = () => {
             .then((result) => {
                 dispatch(createSetLocationsAction(result.data.locations));
                 setRoutes(result.data.locations);
-                result.data.blockUI && dispatch(createBlockAction(retreiveBlockUi()));
+                result.data.blockUI && dispatch(createBlockAction(retrieveBlockUi()));
             })
             .catch((error) => {
                 // Fallback router if there is any error

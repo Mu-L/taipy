@@ -15,11 +15,11 @@ import pathlib
 import shutil
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Type, Union
 
-from taipy.config.config import Config
+from taipy.common.config import Config
 
 from ..common._utils import _retry_repository_operation
 from ..common.typing import Converter, Entity, Json, ModelType
-from ..exceptions import FileCannotBeRead, InvalidExportPath, ModelNotFound
+from ..exceptions import FileCannotBeRead, FileEmpty, ModelNotFound
 from ._abstract_repository import _AbstractRepository
 from ._decoder import _Decoder
 from ._encoder import _Encoder
@@ -39,7 +39,7 @@ class _FileSystemRepository(_AbstractRepository[ModelType, Entity]):
         dir_name (str): Folder that will hold the files for this dataclass model.
     """
 
-    __EXCEPTIONS_TO_RETRY = (FileCannotBeRead,)
+    __EXCEPTIONS_TO_RETRY = (FileCannotBeRead, FileEmpty)
 
     def __init__(self, model_type: Type[ModelType], converter: Type[Converter], dir_name: str):
         self.model_type = model_type
@@ -74,7 +74,7 @@ class _FileSystemRepository(_AbstractRepository[ModelType, Entity]):
 
         try:
             file_content = self.__read_file(path)
-        except (FileNotFoundError, FileCannotBeRead):
+        except (FileNotFoundError, FileCannotBeRead, FileEmpty):
             raise ModelNotFound(str(self.dir_path), entity_id) from None
 
         return self.__file_content_to_entity(file_content)
@@ -117,23 +117,17 @@ class _FileSystemRepository(_AbstractRepository[ModelType, Entity]):
     def _search(self, attribute: str, value: Any, filters: Optional[List[Dict]] = None) -> List[Entity]:
         return list(self.__search(attribute, value, filters))
 
-    def _export(self, entity_id: str, folder_path: Union[str, pathlib.Path]):
+    def _export(self, entity_id: str, folder_path: Union[str, pathlib.Path]) -> None:
         if isinstance(folder_path, str):
             folder: pathlib.Path = pathlib.Path(folder_path)
         else:
             folder = folder_path
-
-        if folder.resolve() == self._storage_folder.resolve():
-            raise InvalidExportPath("The export folder must not be the storage folder.")
 
         export_dir = folder / self._dir_name
         if not export_dir.exists():
             export_dir.mkdir(parents=True)
 
         export_path = export_dir / f"{entity_id}.json"
-        # Delete if exists.
-        if export_path.exists():
-            export_path.unlink()
 
         shutil.copy2(self.__get_path(entity_id), export_path)
 
@@ -230,7 +224,7 @@ class _FileSystemRepository(_AbstractRepository[ModelType, Entity]):
 
         try:
             file_content = self.__read_file(filepath)
-        except (FileNotFoundError, FileCannotBeRead):
+        except (FileNotFoundError, FileCannotBeRead, FileEmpty):
             return None
 
         for _filter in filters:
@@ -249,6 +243,8 @@ class _FileSystemRepository(_AbstractRepository[ModelType, Entity]):
         try:
             with filepath.open("r", encoding="UTF-8") as f:
                 file_content = f.read()
+            if not file_content:
+                raise FileEmpty(str(filepath))
             return file_content
         except Exception:
             raise FileCannotBeRead(str(filepath)) from None

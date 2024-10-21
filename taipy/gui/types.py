@@ -28,6 +28,7 @@ from .utils import (
     _TaipyLov,
     _TaipyLovValue,
     _TaipyNumber,
+    _TaipyTime,
     _TaipyToJson,
 )
 
@@ -49,6 +50,9 @@ class _WsType(Enum):
     ACKNOWLEDGEMENT = "ACK"
     GET_MODULE_CONTEXT = "GMC"
     GET_DATA_TREE = "GDT"
+    GET_ROUTES = "GR"
+    FAVICON = "FV"
+    BROADCAST = "BC"
 
 
 NumberTypes = {"int", "int64", "float", "float64"}
@@ -77,29 +81,37 @@ class PropertyType(Enum):
     date = _TaipyDate
     date_range = _TaipyDateRange
     dict = "dict"
+    time = _TaipyTime
     """
     The property holds a dictionary.
     """
+    dynamic_date = "dynamicdate"
+    """
+    The property is dynamic and holds a date.
+    """
     dynamic_dict = _TaipyDict
     """
-    The property holds a dynamic dictionary.
+    The property is dynamic and holds a dictionary.
     """
     dynamic_number = _TaipyNumber
     """
-    The property holds a dynamic number.
+    The property is dynamic and holds a number.
     """
     dynamic_lo_numbers = _TaipyLoNumbers
     """
-    The property holds a dynamic list of numbers.
+    The property is dynamic and holds a list of numbers.
     """
     dynamic_boolean = _TaipyBool
     """
-    The property holds a dynamic Boolean value.
+    The property is dynamic and holds a Boolean value.
     """
     dynamic_list = "dynamiclist"
+    """
+    The property is dynamic and holds a list.
+    """
     dynamic_string = "dynamicstring"
     """
-    The property holds a dynamic string.
+    The property is dynamic and holds a string.
     """
     function = "function"
     """
@@ -107,7 +119,9 @@ class PropertyType(Enum):
     """
     image = _TaipyContentImage
     json = "json"
+    single_lov = "singlelov"
     lov = _TaipyLov
+    lov_no_default = "lovnodefault"
     """
     The property holds a LoV (list of values).
     """

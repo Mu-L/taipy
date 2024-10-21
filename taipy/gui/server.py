@@ -21,9 +21,18 @@ import time
 import typing as t
 import webbrowser
 from importlib import util
-from random import randint
+from random import choices, randint
 
-from flask import Blueprint, Flask, json, jsonify, render_template, request, send_from_directory
+from flask import (
+    Blueprint,
+    Flask,
+    json,
+    jsonify,
+    make_response,
+    render_template,
+    request,
+    send_from_directory,
+)
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from gitignore_parser import parse_gitignore
@@ -31,12 +40,13 @@ from kthread import KThread
 from werkzeug.serving import is_running_from_reloader
 
 import __main__
-from taipy.logger._taipy_logger import _TaipyLogger
+from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from ._renderers.json import _TaipyJsonProvider
 from .config import ServerConfig
 from .custom._page import _ExternalResourceHandlerManager
 from .utils import _is_in_notebook, _is_port_open, _RuntimeManager
+from .utils._css import get_style
 
 if t.TYPE_CHECKING:
     from .gui import Gui
@@ -48,7 +58,6 @@ class _Server:
     __OPENING_CURLY = r"\1&#x7B;"
     __CLOSING_CURLY = r"&#x7D;\2"
     _RESOURCE_HANDLER_ARG = "tprh"
-    _CUSTOM_PAGE_META_ARG = "tp_cp_meta"
 
     def __init__(
         self,
@@ -111,6 +120,14 @@ class _Server:
             elif "type" in message:
                 gui._manage_message(message["type"], message)
 
+        @self._ws.on("connect")
+        def handle_connect():
+            gui._handle_connect()
+
+        @self._ws.on("disconnect")
+        def handle_disconnect():
+            gui._handle_disconnect()
+
     def __is_ignored(self, file_path: str) -> bool:
         if not hasattr(self, "_ignore_matches"):
             __IGNORE_FILE = ".taipyignore"
@@ -152,9 +169,15 @@ class _Server:
             if resource_handler_id is not None:
                 resource_handler = _ExternalResourceHandlerManager().get(resource_handler_id)
                 if resource_handler is None:
-                    return (f"Invalid value for query {_Server._RESOURCE_HANDLER_ARG}", 404)
+                    response = make_response(
+                        "Cookie was deleted due to invalid resource handler id. Please restart the page manually.", 400
+                    )
+                    response.set_cookie(
+                        _Server._RESOURCE_HANDLER_ARG, "", secure=request.is_secure, httponly=True, expires=0, path="/"
+                    )
+                    return response
                 try:
-                    return resource_handler.get_resources(path, static_folder)
+                    return resource_handler.get_resources(path, static_folder, base_url)
                 except Exception as e:
                     raise RuntimeError("Can't get resources from custom resource handler") from e
             if path == "" or path == "index.html" or "." not in path:
@@ -162,7 +185,7 @@ class _Server:
                     return render_template(
                         "index.html",
                         title=title,
-                        favicon=favicon,
+                        favicon=f"{favicon}?version={version}",
                         root_margin=root_margin,
                         watermark=watermark,
                         config=client_config,
@@ -179,7 +202,7 @@ class _Server:
 
             if path == "taipy.status.json":
                 return self._direct_render_json(self._gui._serve_status(pathlib.Path(template_folder) / path))
-            if str(os.path.normpath(file_path := ((base_path := static_folder + os.path.sep) + path))).startswith(
+            if (file_path := str(os.path.normpath((base_path := static_folder + os.path.sep) + path))).startswith(
                 base_path
             ) and os.path.isfile(file_path):
                 return send_from_directory(base_path, path)
@@ -187,17 +210,17 @@ class _Server:
             for k, v in self.__path_mapping.items():
                 if (
                     path.startswith(f"{k}/")
-                    and str(
-                        os.path.normpath(file_path := ((base_path := v + os.path.sep) + path[len(k) + 1 :]))
+                    and (
+                        file_path := str(os.path.normpath((base_path := v + os.path.sep) + path[len(k) + 1 :]))
                     ).startswith(base_path)
                     and os.path.isfile(file_path)
                 ):
                     return send_from_directory(base_path, path[len(k) + 1 :])
             if (
                 hasattr(__main__, "__file__")
-                and str(
-                    os.path.normpath(
-                        file_path := ((base_path := os.path.dirname(__main__.__file__) + os.path.sep) + path)
+                and (
+                    file_path := str(
+                        os.path.normpath((base_path := os.path.dirname(__main__.__file__) + os.path.sep) + path)
                     )
                 ).startswith(base_path)
                 and os.path.isfile(file_path)
@@ -205,9 +228,9 @@ class _Server:
             ):
                 return send_from_directory(base_path, path)
             if (
-                str(os.path.normpath(file_path := (base_path := self._gui._root_dir + os.path.sep) + path)).startswith(
-                    base_path
-                )
+                (
+                    file_path := str(os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + path))
+                ).startswith(base_path)
                 and os.path.isfile(file_path)
                 and not self.__is_ignored(file_path)
             ):
@@ -222,6 +245,7 @@ class _Server:
         template_str = _Server.__RE_CLOSING_CURLY.sub(_Server.__CLOSING_CURLY, template_str)
         template_str = template_str.replace('"{!', "{")
         template_str = template_str.replace('!}"', "}")
+        style = get_style(style)
         return self._direct_render_json(
             {
                 "jsx": template_str,
@@ -237,40 +261,64 @@ class _Server:
     def get_flask(self):
         return self._flask
 
+    def get_port(self):
+        return self._port
+
     def test_client(self):
-        return self._flask.test_client()
+        return t.cast(Flask, self._flask).test_client()
 
     def _run_notebook(self):
         self._is_running = True
         self._ws.run(self._flask, host=self._host, port=self._port, debug=False, use_reloader=False)
 
     def _get_async_mode(self) -> str:
-        return self._ws.async_mode
+        return self._ws.async_mode  # type: ignore[reportAttributeAccessIssue]
 
     def _apply_patch(self):
         if self._get_async_mode() == "gevent" and util.find_spec("gevent"):
-            from gevent import monkey
+            from gevent import get_hub, monkey
 
+            get_hub().NOT_ERROR += (KeyboardInterrupt,)
             if not monkey.is_module_patched("time"):
                 monkey.patch_time()
         if self._get_async_mode() == "eventlet" and util.find_spec("eventlet"):
-            from eventlet import monkey_patch, patcher
+            from eventlet import monkey_patch, patcher  # type: ignore[reportMissingImport]
 
             if not patcher.is_monkey_patched("time"):
                 monkey_patch(time=True)
 
-    def _get_random_port(self):  # pragma: no cover
+    def _get_random_port(
+        self, port_auto_ranges: t.Optional[t.List[t.Union[int, t.Tuple[int, int]]]] = None
+    ):  # pragma: no cover
+        port_auto_ranges = port_auto_ranges or [(49152, 65535)]
+        random_weights = [1 if isinstance(r, int) else abs(r[1] - r[0]) + 1 for r in port_auto_ranges]
         while True:
-            port = randint(49152, 65535)
+            random_choices = [
+                r if isinstance(r, int) else randint(min(r[0], r[1]), max(r[0], r[1])) for r in port_auto_ranges
+            ]
+            port = choices(random_choices, weights=random_weights)[0]
             if port not in _RuntimeManager().get_used_port() and not _is_port_open(self._host, port):
                 return port
 
-    def run(self, host, port, debug, use_reloader, flask_log, run_in_thread, allow_unsafe_werkzeug, notebook_proxy):
+    def run(
+        self,
+        host,
+        port,
+        client_url,
+        debug,
+        use_reloader,
+        flask_log,
+        run_in_thread,
+        allow_unsafe_werkzeug,
+        notebook_proxy,
+        port_auto_ranges,
+    ):
         host_value = host if host != "0.0.0.0" else "localhost"
         self._host = host
         if port == "auto":
-            port = self._get_random_port()
+            port = self._get_random_port(port_auto_ranges)
         self._port = port
+        client_url = client_url.format(port=port)
         if _is_in_notebook() and notebook_proxy:  # pragma: no cover
             from .utils.proxy import NotebookProxy
 
@@ -283,7 +331,7 @@ class _Server:
             runtime_manager.add_gui(self._gui, port)
         if debug and not is_running_from_reloader() and _is_port_open(host_value, port):
             raise ConnectionError(
-                "Port {port} is already opened on {host} because another application is running on the same port. Please pick another port number and rerun with the 'port=<new_port>' option. You can also let Taipy choose a port number for you by running with the 'port=\"auto\"' option."  # noqa: E501
+                f"Port {port} is already opened on {host} because another application is running on the same port.\nPlease pick another port number and rerun with the 'port=<new_port>' setting.\nYou can also let Taipy choose a port number for you by running with the 'port=\"auto\"' setting."  # noqa: E501
             )
         if not flask_log:
             log = logging.getLogger("werkzeug")
@@ -292,8 +340,9 @@ class _Server:
                 _TaipyLogger._get_logger().info(f" * Server starting on http://{host_value}:{port}")
             else:
                 _TaipyLogger._get_logger().info(f" * Server reloaded on http://{host_value}:{port}")
+            _TaipyLogger._get_logger().info(f" * Application is accessible at {client_url}")
         if not is_running_from_reloader() and self._gui._get_config("run_browser", False):
-            webbrowser.open(f"http://{host_value}{f':{port}' if port else ''}", new=2)
+            webbrowser.open(client_url, new=2)
         if _is_in_notebook() or run_in_thread:
             self._thread = KThread(target=self._run_notebook)
             self._thread.start()
@@ -311,15 +360,18 @@ class _Server:
         # flask-socketio specific conditions for 'allow_unsafe_werkzeug' parameters to be popped out of kwargs
         if self._get_async_mode() == "threading" and (not sys.stdin or not sys.stdin.isatty()):
             run_config = {**run_config, "allow_unsafe_werkzeug": allow_unsafe_werkzeug}
-        self._ws.run(**run_config)
+        try:
+            self._ws.run(**run_config)
+        except KeyboardInterrupt:
+            pass
 
     def stop_thread(self):
         if hasattr(self, "_thread") and self._thread.is_alive() and self._is_running:
             self._is_running = False
             with contextlib.suppress(Exception):
                 if self._get_async_mode() == "gevent":
-                    if self._ws.wsgi_server is not None:
-                        self._ws.wsgi_server.stop()
+                    if self._ws.wsgi_server is not None:  # type: ignore[reportAttributeAccessIssue]
+                        self._ws.wsgi_server.stop()  # type: ignore[reportAttributeAccessIssue]
                     else:
                         self._thread.kill()
                 else:

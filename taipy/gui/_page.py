@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import typing as t
 import warnings
 
@@ -20,12 +21,15 @@ if t.TYPE_CHECKING:
     from ._renderers import Page
     from .gui import Gui
 
+_DETECT_CLOSING_TAGS = re.compile(r"<([A-Z][-\w]*)(([^>\"]+\"[^\"]*\")*\s*)?(><\/\1>)", flags=re.MULTILINE)
+_SUBSTR_CLOSING_TAG = "<\\1\\2/>"
+
 
 class _Page(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self._rendered_jsx: t.Optional[str] = None
         self._renderer: t.Optional[Page] = None
-        self._style: t.Optional[str] = None
+        self._style: t.Optional[t.Union[str, t.Dict[str, t.Any]]] = None
         self._route: t.Optional[str] = None
         self._head: t.Optional[list] = None
 
@@ -36,17 +40,29 @@ class _Page(object):
             warnings.resetwarnings()
             with gui._set_locals_context(self._renderer._get_module_name()):
                 self._rendered_jsx = self._renderer.render(gui)
-            if not silent and w:
-                s = "\033[1;31m\n"
-                s += (
-                    message
-                    := f"--- {len(w)} warning(s) were found for page '{'/' if self._route == gui._get_root_page_name() else self._route}' {self._renderer._get_content_detail(gui)} ---\n"  # noqa: E501
-                )
-                for i, wm in enumerate(w):
-                    s += f" - Warning {i + 1}: {wm.message}\n"
-                s += "-" * len(message)
-                s += "\033[0m\n"
-                logging.warn(s)
+            if not silent:
+                if (
+                    self._rendered_jsx
+                    and isinstance(self._rendered_jsx, str)
+                    and (
+                        result := _DETECT_CLOSING_TAGS.sub(
+                            _SUBSTR_CLOSING_TAG,
+                            self._rendered_jsx.replace(">style</TaipyStyle>", "/>"),
+                        )
+                    )
+                ):
+                    self._rendered_jsx = result
+                if w:
+                    s = "\033[1;31m\n"
+                    s += (
+                        message
+                        := f"--- {len(w)} warning(s) were found for page '{'/' if self._route == gui._get_root_page_name() else self._route}' {self._renderer._get_content_detail(gui)} ---\n"  # noqa: E501
+                    )
+                    for i, wm in enumerate(w):
+                        s += f" - Warning {i + 1}: {wm.message}\n"
+                    s += "-" * len(message)
+                    s += "\033[0m\n"
+                    logging.warning(s)
         if hasattr(self._renderer, "head"):
             self._head = list(self._renderer.head)  # type: ignore
         # return renderer module_name from frame

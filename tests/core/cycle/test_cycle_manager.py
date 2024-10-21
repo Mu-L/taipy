@@ -11,9 +11,9 @@
 
 from datetime import datetime
 
-from taipy.config.common.frequency import Frequency
-from taipy.config.common.scope import Scope
-from taipy.config.config import Config
+from taipy.common.config import Config
+from taipy.common.config.common.frequency import Frequency
+from taipy.common.config.common.scope import Scope
 from taipy.core.cycle._cycle_manager import _CycleManager
 from taipy.core.cycle.cycle import Cycle
 from taipy.core.cycle.cycle_id import CycleId
@@ -91,7 +91,7 @@ def test_create_and_delete_cycle_entity(tmpdir):
     assert cycle_1.start_date is not None
     assert cycle_1.end_date is not None
     assert cycle_1.start_date < cycle_1.creation_date < cycle_1.end_date
-    assert cycle_1.key == "value"
+    assert cycle_1.properties["key"] == "value"
     assert cycle_1.frequency == Frequency.DAILY
 
     cycle_1_id = cycle_1.id

@@ -7,7 +7,7 @@ on:
         description: "The tag of the package to publish on Pypi (ex: 1.0.0, 1.0.0.dev0)"
         required: true
       target_package:
-        description: "The package to be released (gui, config, core, rest, templates, taipy)"
+        description: "The package to be released (gui, common, core, rest, templates, taipy)"
         required: true
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
     environment: publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           sparse-checkout: taipy/${{ matrix.package }}
           sparse-checkout-cone-mode: false
@@ -36,7 +36,7 @@ jobs:
       - name: Download assets from tag
         if: steps.check-version.outputs.exists == 'false'
         run: |
-          gh release download ${{ github.event.inputs.version }}-${{ github.event.inputs.target_package }}} --dir dist
+          gh release download ${{ github.event.inputs.version }}-${{ github.event.inputs.target_package }} --dir dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

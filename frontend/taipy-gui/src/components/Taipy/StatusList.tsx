@@ -21,8 +21,9 @@ import Popover, { PopoverOrigin } from "@mui/material/Popover";
 import Status, { StatusType } from "./Status";
 import { TaipyBaseProps, TaipyHoverProps } from "./utils";
 import { useClassNames, useDynamicProperty } from "../../utils/hooks";
+import { getComponentClassName } from "./TaipyStyle";
 
-const getStatusIntValue = (status: string) => {
+export const getStatusIntValue = (status: string) => {
     status = status.toLowerCase();
     if (status.startsWith("i")) {
         return 1;
@@ -36,7 +37,7 @@ const getStatusIntValue = (status: string) => {
     return 0;
 };
 
-const getStatusStrValue = (status: number) => {
+export const getStatusStrValue = (status: number) => {
     switch (status) {
         case 1:
             return "info";
@@ -158,7 +159,7 @@ const StatusList = (props: StatusListProps) => {
     return (
         <Tooltip title={hover || ""}>
             <>
-                <Status id={props.id} value={getGlobalStatus(values)} className={className} {...globalProps} />
+                <Status id={props.id} value={getGlobalStatus(values)} className={`${className} ${getComponentClassName(props.children)}`} {...globalProps} />
                 <Popover open={opened} anchorEl={anchorEl} onClose={onOpen} anchorOrigin={ORIGIN}>
                     <Stack direction="column" spacing={1}>
                         {values
@@ -170,13 +171,14 @@ const StatusList = (props: StatusListProps) => {
                                         key={getId(props.id, idx)}
                                         id={getId(props.id, idx)}
                                         value={val}
-                                        className={className}
+                                        className={`${className} ${getComponentClassName(props.children)}`}
                                         {...closeProp}
                                     />
                                 );
                             })}
                     </Stack>
                 </Popover>
+                {props.children}
             </>
         </Tooltip>
     );

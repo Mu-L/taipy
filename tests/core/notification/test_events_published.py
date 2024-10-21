@@ -10,8 +10,9 @@
 # specific language governing permissions and limitations under the License.
 
 from queue import SimpleQueue
+from typing import Any, Dict, List
 
-from taipy.config import Config, Frequency
+from taipy.common.config import Config, Frequency
 from taipy.core import taipy as tp
 from taipy.core.job.status import Status
 from taipy.core.notification.core_event_consumer import CoreEventConsumerBase
@@ -25,11 +26,12 @@ class Snapshot:
     A captured snapshot of the recording core events consumer.
     """
 
-    def __init__(self):
-        self.collected_events = []
-        self.entity_type_collected = {}
-        self.operation_collected = {}
-        self.attr_name_collected = {}
+    def __init__(self) -> None:
+        self.collected_events: List[Event] = []
+        self.entity_type_collected: Dict[EventEntityType, int] = {}
+        self.operation_collected: Dict[EventEntityType, int] = {}
+        self.attr_name_collected: Dict[EventEntityType, int] = {}
+        self.attr_value_collected: Dict[EventEntityType, List[Any]] = {}
 
     def capture_event(self, event):
         self.collected_events.append(event)
@@ -37,6 +39,10 @@ class Snapshot:
         self.operation_collected[event.operation] = self.operation_collected.get(event.operation, 0) + 1
         if event.attribute_name:
             self.attr_name_collected[event.attribute_name] = self.attr_name_collected.get(event.attribute_name, 0) + 1
+            if self.attr_value_collected.get(event.attribute_name, None):
+                self.attr_value_collected[event.attribute_name].append(event.attribute_value)
+            else:
+                self.attr_value_collected[event.attribute_name] = [event.attribute_value]
 
 
 class RecordingConsumer(CoreEventConsumerBase):
@@ -144,12 +150,7 @@ def test_events_published_for_writing_dn():
     scenario.the_input.write("test")
     snapshot = all_evts.capture()
     assert len(snapshot.collected_events) == 4
-    assert snapshot.entity_type_collected.get(EventEntityType.CYCLE, 0) == 0
     assert snapshot.entity_type_collected.get(EventEntityType.DATA_NODE, 0) == 4
-    assert snapshot.entity_type_collected.get(EventEntityType.TASK, 0) == 0
-    assert snapshot.entity_type_collected.get(EventEntityType.SEQUENCE, 0) == 0
-    assert snapshot.entity_type_collected.get(EventEntityType.SCENARIO, 0) == 0
-    assert snapshot.operation_collected.get(EventOperation.CREATION, 0) == 0
     assert snapshot.operation_collected.get(EventOperation.UPDATE, 0) == 4
     all_evts.stop()
 
